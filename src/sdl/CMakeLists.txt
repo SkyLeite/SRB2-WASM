@@ -1,9 +1,5 @@
 # Declare SDL2 interface sources
 
-if("${CMAKE_BUILD_TYPE}" EQUAL "Release")
-  add_compile_options("SHELL: -O3")
-endif()
-
 target_sources(SRB2SDL2 PRIVATE mixer_sound.c)
 
 target_sourcefile(c)
@@ -28,7 +24,7 @@ add_link_options("SHELL: -sUSE_SDL_MIXER=2")
 add_link_options("SHELL: -s ALLOW_MEMORY_GROWTH=1")
 add_link_options("SHELL: -s INITIAL_MEMORY=655360000")
 add_link_options("SHELL: -s STACK_SIZE=65536000")
-add_link_options("--preload-file=${CMAKE_BINARY_DIR}/assets/out@/")
+add_link_options("--preload-file=${PROJECT_BINARY_DIR}/assets/out@/")
 add_link_options("SHELL: --use-preload-plugins")
 
 target_compile_definitions(SRB2SDL2 PRIVATE -DHAVE_MIXER -DSOUND=SOUND_MIXER)
@@ -49,10 +45,14 @@ target_link_options(
   -sALLOW_MEMORY_GROWTH=1
   -sINITIAL_MEMORY=983040000
   -sSTACK_SIZE=655360000
-  --preload-file=${CMAKE_BINARY_DIR}/assets/out@/
+  --preload-file=${PROJECT_BINARY_DIR}/assets/out@/
   --use-preload-plugins)
 target_compile_options(SRB2SDL2 PRIVATE -sUSE_SDL=2 -sUSE_SDL_MIXER=2
                                         -sUSE_ZLIB -sUSE_LIBPNG)
+
+if("${CMAKE_BUILD_TYPE}" EQUAL "Release")
+  target_compile_options(SRB2SDL2 PRIVATE -O3)
+endif()
 
 # Installation ####
 install(TARGETS SRB2SDL2 SRB2SDL2 RUNTIME DESTINATION .)
