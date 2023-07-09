@@ -3,7 +3,7 @@
 # if(${CMAKE_SYSTEM} MATCHES Linux) Asset installation isn't part of the Linux
 # target return() endif()
 
-set(SRB2_CONFIG_ASSET_DIRECTORY ${PROJECT_SOURCE_DIR}/assets)
+set(SRB2_CONFIG_ASSET_DIRECTORY ${PROJECT_SOURCE_DIR}/assets/out)
 
 if("${SRB2_CONFIG_ASSET_DIRECTORY}" STREQUAL "")
   message(
@@ -47,7 +47,7 @@ file(
   DESTINATION out
   FILES_MATCHING
   PATTERN "*.dat")
-# file(COPY "${SRB2_CONFIG_ASSET_DIRECTORY}/models" DESTINATION out/models)
+file(COPY "${SRB2_CONFIG_ASSET_DIRECTORY}/models" DESTINATION out/models)
 
 # Installation
 
