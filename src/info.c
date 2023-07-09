@@ -22,6 +22,7 @@
 #include "d_player.h"
 #include "v_video.h" // V_*MAP constants
 #include "lzf.h"
+#include "p_enemy.h"
 #ifdef HWRENDER
 #include "hardware/hw_light.h"
 #endif

@@ -8,7 +8,7 @@
  */
 
 #if (defined(CMAKECONFIG))
-#include "config.h"
+#include "config.h.in"
 const char *compbranch = SRB2_COMP_BRANCH;
 const char *comprevision = SRB2_COMP_REVISION;
 

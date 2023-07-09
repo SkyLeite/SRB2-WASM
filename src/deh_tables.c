@@ -25,6 +25,7 @@
 #include "g_game.h" // Joystick axes (for lua)
 #include "i_joy.h"
 #include "g_input.h" // Game controls (for lua)
+#include "p_enemy.h" 
 
 #include "deh_tables.h"
 

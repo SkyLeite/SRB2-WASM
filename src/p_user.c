@@ -32,6 +32,7 @@
 #include "i_video.h"
 #include "p_slopes.h"
 #include "p_spec.h"
+#include "p_enemy.h"
 #include "r_splats.h"
 #include "z_zone.h"
 #include "w_wad.h"

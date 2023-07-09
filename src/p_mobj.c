@@ -19,6 +19,7 @@
 #include "hu_stuff.h"
 #include "p_local.h"
 #include "p_setup.h"
+#include "p_enemy.h"
 #include "r_fps.h"
 #include "r_main.h"
 #include "r_skins.h"

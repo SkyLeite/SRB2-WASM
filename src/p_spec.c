@@ -19,6 +19,7 @@
 #include "doomdef.h"
 #include "g_game.h"
 #include "p_local.h"
+#include "p_enemy.h"
 #include "p_setup.h" // levelflats for flat animation
 #include "r_data.h"
 #include "r_fps.h"

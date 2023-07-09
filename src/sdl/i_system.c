@@ -23,12 +23,7 @@
 /// \file
 /// \brief SRB2 system stuff for SDL
 
-#ifdef CMAKECONFIG
-#include "config.h"
-#else
 #include "../config.h.in"
-#endif
-
 #include <signal.h>
 
 #ifdef _WIN32
@@ -79,7 +74,7 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #define HAVE_SDLCPUINFO
 
 #if defined (__unix__) || defined(__APPLE__) || (defined (UNIXCOMMON) && !defined (__HAIKU__))
-#if defined (__linux__)
+#if defined (__linux__) || defined(__EMSCRIPTEN__)
 #include <sys/vfs.h>
 #else
 #include <sys/param.h>
@@ -105,7 +100,6 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #if defined (__unix__) || (defined (UNIXCOMMON) && !defined (__APPLE__))
 #include <errno.h>
 #include <sys/wait.h>
-#define NEWSIGNALHANDLER
 #endif
 
 #ifndef NOMUMBLE
@@ -135,12 +129,6 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 
 #ifndef errno
 #include <errno.h>
-#endif
-
-#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
-#include <execinfo.h>
-#include <time.h>
-#define UNIXBACKTRACE
 #endif
 
 // Locations to directly check for srb2.pk3 in
@@ -257,71 +245,6 @@ SDL_bool framebuffer = SDL_FALSE;
 
 UINT8 keyboard_started = false;
 
-#ifdef UNIXBACKTRACE
-#define STDERR_WRITE(string) if (fd != -1) I_OutputMsg("%s", string)
-#define CRASHLOG_WRITE(string) if (fd != -1) write(fd, string, strlen(string))
-#define CRASHLOG_STDERR_WRITE(string) \
-	if (fd != -1)\
-		write(fd, string, strlen(string));\
-	I_OutputMsg("%s", string)
-
-static void write_backtrace(INT32 signal)
-{
-	int fd = -1;
-	size_t size;
-	time_t rawtime;
-	struct tm timeinfo;
-
-	enum { BT_SIZE = 1024, STR_SIZE = 32 };
-	void *array[BT_SIZE];
-	char timestr[STR_SIZE];
-
-	const char *error = "An error occurred within SRB2! Send this stack trace to someone who can help!\n";
-	const char *error2 = "(Or find crash-log.txt in your SRB2 directory.)\n"; // Shown only to stderr.
-
-	fd = open(va("%s" PATHSEP "%s", srb2home, "crash-log.txt"), O_CREAT|O_APPEND|O_RDWR, S_IRUSR|S_IWUSR);
-
-	if (fd == -1)
-		I_OutputMsg("\nWARNING: Couldn't open crash log for writing! Make sure your permissions are correct. Please save the below report!\n");
-
-	// Get the current time as a string.
-	time(&rawtime);
-	localtime_r(&rawtime, &timeinfo);
-	strftime(timestr, STR_SIZE, "%a, %d %b %Y %T %z", &timeinfo);
-
-	CRASHLOG_WRITE("------------------------\n"); // Nice looking seperator
-
-	CRASHLOG_STDERR_WRITE("\n"); // Newline to look nice for both outputs.
-	CRASHLOG_STDERR_WRITE(error); // "Oops, SRB2 crashed" message
-	STDERR_WRITE(error2); // Tell the user where the crash log is.
-
-	// Tell the log when we crashed.
-	CRASHLOG_WRITE("Time of crash: ");
-	CRASHLOG_WRITE(timestr);
-	CRASHLOG_WRITE("\n");
-
-	// Give the crash log the cause and a nice 'Backtrace:' thing
-	// The signal is given to the user when the parent process sees we crashed.
-	CRASHLOG_WRITE("Cause: ");
-	CRASHLOG_WRITE(strsignal(signal));
-	CRASHLOG_WRITE("\n"); // Newline for the signal name
-
-	CRASHLOG_STDERR_WRITE("\nBacktrace:\n");
-
-	// Flood the output and log with the backtrace
-	size = backtrace(array, BT_SIZE);
-	backtrace_symbols_fd(array, size, fd);
-	backtrace_symbols_fd(array, size, STDERR_FILENO);
-
-	CRASHLOG_WRITE("\n"); // Write another newline to the log so it looks nice :)
-
-	close(fd);
-}
-#undef STDERR_WRITE
-#undef CRASHLOG_WRITE
-#undef CRASHLOG_STDERR_WRITE
-#endif // UNIXBACKTRACE
-
 static void I_ReportSignal(int num, int coredumped)
 {
 	//static char msg[] = "oh no! back to reality!\r\n";
@@ -377,21 +300,16 @@ static void I_ReportSignal(int num, int coredumped)
 			sigmsg, NULL);
 }
 
-#ifndef NEWSIGNALHANDLER
 FUNCNORETURN static ATTRNORETURN void signal_handler(INT32 num)
 {
 	D_QuitNetGame(); // Fix server freezes
 	CL_AbortDownloadResume();
-#ifdef UNIXBACKTRACE
-	write_backtrace(num);
-#endif
 	I_ReportSignal(num, 0);
 	I_ShutdownSystem();
 	signal(num, SIG_DFL);               //default signal action
 	raise(num);
 	I_Quit();
 }
-#endif
 
 FUNCNORETURN static ATTRNORETURN void quit_handler(int num)
 {
@@ -767,35 +685,12 @@ static void I_RegisterSignals (void)
 
 	// If these defines don't exist,
 	// then compilation would have failed above us...
-#ifndef NEWSIGNALHANDLER
 	signal(SIGILL , signal_handler);
 	signal(SIGSEGV , signal_handler);
 	signal(SIGABRT , signal_handler);
 	signal(SIGFPE , signal_handler);
-#endif
 }
 
-#ifdef NEWSIGNALHANDLER
-static void signal_handler_child(INT32 num)
-{
-#ifdef UNIXBACKTRACE
-	write_backtrace(num);
-#endif
-
-	signal(num, SIG_DFL);               //default signal action
-	raise(num);
-}
-
-static void I_RegisterChildSignals(void)
-{
-	// If these defines don't exist,
-	// then compilation would have failed above us...
-	signal(SIGILL , signal_handler_child);
-	signal(SIGSEGV , signal_handler_child);
-	signal(SIGABRT , signal_handler_child);
-	signal(SIGFPE , signal_handler_child);
-}
-#endif
 
 //
 //I_OutputMsg
@@ -2229,87 +2124,6 @@ void I_Sleep(UINT32 ms)
 	SDL_Delay(ms);
 }
 
-#ifdef NEWSIGNALHANDLER
-static void newsignalhandler_Warn(const char *pr)
-{
-	char text[128];
-
-	snprintf(text, sizeof text,
-			"Error while setting up signal reporting: %s: %s",
-			pr,
-			strerror(errno)
-	);
-
-	I_OutputMsg("%s\n", text);
-
-	if (!M_CheckParm("-dedicated"))
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-			"Startup error",
-			text, NULL);
-
-	I_ShutdownConsole();
-	exit(-1);
-}
-
-static void I_Fork(void)
-{
-	int child;
-	int status;
-	int signum;
-	int c;
-
-	child = fork();
-
-	switch (child)
-	{
-		case -1:
-			newsignalhandler_Warn("fork()");
-			break;
-		case 0:
-			I_RegisterChildSignals();
-			break;
-		default:
-			if (logstream)
-				fclose(logstream);/* the child has this */
-
-			c = wait(&status);
-
-#ifdef LOGMESSAGES
-			/* By the way, exit closes files. */
-			logstream = fopen(logfilename, "at");
-#else
-			logstream = 0;
-#endif
-
-			if (c == -1)
-			{
-				kill(child, SIGKILL);
-				newsignalhandler_Warn("wait()");
-			}
-			else
-			{
-				if (WIFSIGNALED (status))
-				{
-					signum = WTERMSIG (status);
-#ifdef WCOREDUMP
-					I_ReportSignal(signum, WCOREDUMP (status));
-#else
-					I_ReportSignal(signum, 0);
-#endif
-					status = 128 + signum;
-				}
-				else if (WIFEXITED (status))
-				{
-					status = WEXITSTATUS (status);
-				}
-
-				I_ShutdownConsole();
-				exit(status);
-			}
-	}
-}
-#endif/*NEWSIGNALHANDLER*/
-
 INT32 I_StartupSystem(void)
 {
 	SDL_version SDLcompiled;
@@ -2321,9 +2135,6 @@ INT32 I_StartupSystem(void)
 	I_AddExitFunc(I_stop_threads);
 #endif
 	I_StartupConsole();
-#ifdef NEWSIGNALHANDLER
-	I_Fork();
-#endif
 	I_RegisterSignals();
 	I_OutputMsg("Compiled for SDL version: %d.%d.%d\n",
 	 SDLcompiled.major, SDLcompiled.minor, SDLcompiled.patch);
@@ -2608,9 +2419,7 @@ void I_ShutdownSystem(void)
 {
 	INT32 c;
 
-#ifndef NEWSIGNALHANDLER
 	I_ShutdownConsole();
-#endif
 
 	for (c = MAX_QUIT_FUNCS-1; c >= 0; c--)
 		if (quit_funcs[c])

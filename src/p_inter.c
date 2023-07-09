@@ -17,6 +17,7 @@
 #include "g_game.h"
 #include "m_random.h"
 #include "p_local.h"
+#include "p_enemy.h"
 #include "s_sound.h"
 #include "r_main.h"
 #include "st_stuff.h"

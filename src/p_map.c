@@ -29,6 +29,7 @@
 #include "r_splats.h"
 
 #include "p_slopes.h"
+#include "p_enemy.h"
 
 #include "z_zone.h"
 
