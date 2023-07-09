@@ -54,6 +54,8 @@ if("${CMAKE_BUILD_TYPE}" EQUAL "Release")
   target_compile_options(SRB2SDL2 PRIVATE -O3)
 endif()
 
+set_target_properties(SRB2SDL2 PROPERTIES OUTPUT_NAME "SRB2SDL2" SUFFIX ".js")
+
 # Installation ####
 install(TARGETS SRB2SDL2 SRB2SDL2 RUNTIME DESTINATION .)
 
