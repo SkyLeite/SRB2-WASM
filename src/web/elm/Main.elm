@@ -92,7 +92,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         StartGame ->
-            ( model, startGame () )
+            ( { model | emStatus = Status.Starting }, startGame () )
 
         GotGameOutput line ->
             let
@@ -189,6 +189,12 @@ viewControls status =
                 [ Views.Button.init { text = "Start", onClick = StartGame } |> Views.Button.toHtml
                 , p [] [ span [] [ text "WARNING: This will download approximately 500MB of data" ] ]
                 ]
+
+        Status.Starting ->
+            Views.Button.init { text = "Loading...", onClick = StartGame }
+                |> Views.Button.withSpinner
+                |> Views.Button.disabled
+                |> Views.Button.toHtml
 
         Status.Running ->
             div [ class "flex gap-2" ]

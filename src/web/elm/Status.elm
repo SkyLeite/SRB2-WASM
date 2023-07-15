@@ -18,6 +18,7 @@ type Status
     | Running
     | Error
     | NotStarted
+    | Starting
     | Nothing
 
 
@@ -73,6 +74,9 @@ toString status =
 
         NotStarted ->
             "Not Started"
+
+        Starting ->
+            "Starting..."
 
         Nothing ->
             ""
