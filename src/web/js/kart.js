@@ -13,6 +13,7 @@ export class Kart {
           app.ports.gameOutput.send(text);
         };
       })(),
+      stdin: {},
       printErr: (t) => {
         const text = Kart.parseEmsText(t);
         console.log(text);
