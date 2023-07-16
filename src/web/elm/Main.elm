@@ -154,7 +154,7 @@ update msg model =
 document : Model -> Browser.Document Msg
 document model =
     { body = view model
-    , title = "SRB2Kart v1.6"
+    , title = "Sonic Robo Blast 2 vSomething.IForgot"
     }
 
 
